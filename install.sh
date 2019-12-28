@@ -41,10 +41,10 @@ wget https://yuukuun.github.io/v2ray/v2rayclient.sh
 wget https://yuukuun.github.io/v2ray/addssl.sh
 
 ###入入库###
+. ~/v2rays/addssl.sh
 . ~/v2rays/nginx.sh
 . ~/v2rays/v2rayserver.sh
 . ~/v2rays/v2rayclient.sh
-
 
 ###输出信息###
 echo "#################################################"
