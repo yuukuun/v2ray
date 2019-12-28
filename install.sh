@@ -3,10 +3,10 @@
 
 ### 安装步骤 ### 
 ### wget https://yuukuun.github.io/v2ray/install.sh && chmod +x install.sh && ./install.sh
-###PLEASE INTER DOMAIN:输入域名
+### 输入域名
 
 
-read -p "PLEASE INTER DOMAIN:" url
+read -p "PLEASE INTER DOMAIN : " url
 ###判断是否redhat系列###
 if [[ -f /etc/redhat-release ]];then
 	sudo systemctl start firewalld
@@ -30,7 +30,7 @@ elif [[ -f /etc/lsb-release ]];then
 	./Configure -des -Dprefix=/usr/local/perl
 	make && make install
 else
-	echo "###################### Nginx Install error ... ######################"
+	echo "###################### Install error ... ######################"
 fi
 
 ### 本地创建目录
@@ -38,6 +38,7 @@ sudo mkdir ~/v2rays && cd ~/v2rays
 wget https://yuukuun.github.io/v2ray/nginx.sh
 wget https://yuukuun.github.io/v2ray/v2rayserver.sh
 wget https://yuukuun.github.io/v2ray/v2rayclient.sh
+wget https://yuukuun.github.io/v2ray/addssl.sh
 
 ###入入库###
 . ~/v2rays/nginx.sh

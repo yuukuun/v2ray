@@ -1,7 +1,7 @@
 ###nginx的安装
 
 #初始化
-	echo "I###################### Nginx Install ... ######################"
+	echo "I######################  Install Nginx ... ######################"
 	sudo mkdir /usr/local/nginx
 	sudo mkdir /usr/local/nginx/ssl
 	sudo mkdir /usr/local/nginx/conf.d
@@ -102,8 +102,13 @@ PrivateTmp=true
 [Install]
 WantedBy=multi-user.target
 EOF
+
+##SSL证书
+
+
+
 # sudo systemctl enable nginx.service
 # sudo systemctl start nginx.service
 
-echo "###################### Install ok ... ######################"
+echo "###################### Install Nginx ok ... ######################"
 
