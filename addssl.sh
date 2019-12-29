@@ -28,8 +28,6 @@ case $num in
 	echo "CloudFlare获取KEY：https://dash.cloudflare.com/profile/api-tokens"
 	read -p "请输入CloudFlare CF_Key：" CF_Key
 	read -p "请输入CloudFlare CF_Email：" CF_Email
-	# export CF_Key && echo 'export CF_Key="$CF_Key"' >> ~/.bashrc
-	# export CF_Email && echo 'export CF_Email="$CF_Email"' >> ~/.bashrc
     export CF_Key 
     export CF_Email 
 ;; 
