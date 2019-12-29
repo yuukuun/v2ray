@@ -18,16 +18,20 @@ case $num in
 	echo "阿里云获取KEY：https://ak-console.aliyun.com/#/accesskey"
 	read -p "请输入阿里云Ali_Key：" Ali_Key
 	read -p "请输入阿里云Ali_Secret：" Ali_Secret
-	export Ali_Key && echo 'export Ali_Key="$Ali_Key"' >> ~/.bashrc
-	export Ali_Secret && echo 'export Ali_Secret="$Ali_Secret"' >> ~/.bashrc
+	# export Ali_Key && echo 'export Ali_Key="$Ali_Key"' >> ~/.bashrc
+	# export Ali_Secret && echo 'export Ali_Secret="$Ali_Secret"' >> ~/.bashrc
+    export Ali_Key 
+    export Ali_Secret 
 ;;
 2)
 	dns="dns_cf"
 	echo "CloudFlare获取KEY：https://dash.cloudflare.com/profile/api-tokens"
 	read -p "请输入CloudFlare CF_Key：" CF_Key
 	read -p "请输入CloudFlare CF_Email：" CF_Email
-	export CF_Key && echo 'export CF_Key="$CF_Key"' >> ~/.bashrc
-	export CF_Email && echo 'export CF_Email="$CF_Email"' >> ~/.bashrc
+	# export CF_Key && echo 'export CF_Key="$CF_Key"' >> ~/.bashrc
+	# export CF_Email && echo 'export CF_Email="$CF_Email"' >> ~/.bashrc
+    export CF_Key 
+    export CF_Email 
 ;; 
 *) echo "输入错误！" ;;	
 esac
