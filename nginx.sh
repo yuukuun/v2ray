@@ -87,11 +87,7 @@ PrivateTmp=true
 [Install]
 WantedBy=multi-user.target
 EOF
-
 sudo systemctl start nginx.service
 sudo systemctl enable nginx.service
 
-
-
-echo "###################### Install Nginx ok ... ######################"
 
