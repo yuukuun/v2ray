@@ -1,5 +1,14 @@
 ###v2ray客户端安装###
 
+if [[ $url == "" ]];then
+    read -p "请输入您的二级域名 : " url
+fi
+if [[ $uuid == "" ]];then
+    uuid=$(cat /etc/v2ray/config.json | grep '"id"' | cut -d '"' -f4)
+fi
+
+
+
 dir="/usr/local/nginx/html/down/"
 sudo mkdir "$dir" && cd "$dir"
 wget https://github.com/2dust/v2rayN/releases/download/3.3/v2rayN-Core.zip && unzip v2rayN-Core.zip && rm -rf "$dir"*.zip
@@ -66,9 +75,6 @@ cat >"$dir"v2rayN-Core/guiNConfig.json<<-EOP
 }
 EOP
 zip -r "$dir"v2rayN-Core.zip v2rayN-Core/ && rm -rf v2rayN-Core/
-
-
-
 
 ###主页创建###
 cd "$dir"

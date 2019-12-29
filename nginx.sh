@@ -2,9 +2,39 @@
 
 #初始化
 	echo "I######################  Install Nginx ... ######################"
-	sudo mkdir /usr/local/nginx
-	sudo mkdir /usr/local/nginx/ssl
-	sudo mkdir /usr/local/nginx/conf.d
+
+if [[ ! -d /usr/local/nginx ]];then
+    sudo mkdir -p /usr/local/nginx/ssl /usr/local/nginx/conf.d
+fi
+
+
+
+###判断是否redhat系列###
+if [[ -f /etc/redhat-release ]];then
+    sudo systemctl start firewalld
+    sudo firewall-cmd --add-service=http
+    sudo firewall-cmd --add-service=https
+    sudo firewall-cmd --runtime-to-permanent
+    sudo firewall-cmd --reload
+    sudo systemctl enable firewalld 
+    sudo systemctl stop firewalld
+    sudo yum install -y libtool zip perl-core zlib-devel gcc wget pcre* unzip automake autoconf make curl vim
+#判断是否ubuntu系列
+elif [[ -f /etc/lsb-release ]];then 
+    cd /tmp
+    sudo apt-get update
+    sudo apt-get install gcc zip vim wget curl unzip build-essential libtool zlib1g-dev libpcre3 \
+    libpcre3-dev libssl-dev automake autoconf make -y
+    wget http://www.cpan.org/src/5.0/perl-5.26.1.tar.gz
+    tar -xzf perl-5.26.1.tar.gz
+    cd perl-5.26.1
+    sudo mkdir /usr/local/perl
+    ./Configure -des -Dprefix=/usr/local/perl
+    make && make install
+else
+    echo "###################### Install error ... ######################"
+fi
+
 
 #开始安装nginx
 cd /tmp
@@ -42,48 +72,7 @@ http {
     include /usr/local/nginx/conf.d/*.conf;
 }
 EOF
-#nginx配置2
-sudo cat > /usr/local/nginx/conf.d/$url.conf<<-EOF
-server { 
-    listen       80;
-    server_name  $url;
-    rewrite ^(.*)$  https://\$host\$1 permanent; 
-}
-server {
-    listen 443 ssl http2;
-    server_name $url;
-    root /usr/local/nginx/html;
-    index index.php index.html;
-    ssl_certificate /usr/local/nginx/ssl/$url/fullchain.cer; 
-    ssl_certificate_key /usr/local/nginx/ssl/$url/$url.key;
-    #TLS 版本控制
-    ssl_protocols   TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
-    ssl_ciphers     'TLS13-AES-256-GCM-SHA384:TLS13-CHACHA20-POLY1305-SHA256:TLS13-AES-128-GCM-SHA256:TLS13-AES-128-CCM-8-SHA256:TLS13-AES-128-CCM-SHA256:EECDH+CHACHA20:EECDH+CHACHA20-draft:EECDH+ECDSA+AES128:EECDH+aRSA+AES128:RSA+AES128:EECDH+ECDSA+AES256:EECDH+aRSA+AES256:RSA+AES256:EECDH+ECDSA+3DES:EECDH+aRSA+3DES:RSA+3DES:!MD5';
-    ssl_prefer_server_ciphers   on;
-    # 开启 1.3 0-RTT
-    ssl_early_data  on;
-    ssl_stapling on;
-    ssl_stapling_verify on;
-    #add_header Strict-Transport-Security "max-age=31536000";
-    #access_log /var/log/nginx/access.log combined;
-    location /7ba7 {
-        proxy_redirect off;
-        proxy_pass http://127.0.0.1:11234; 
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Host \$http_host;
-    }
-    location / {
-       try_files \$uri \$uri/ /index.php?\$args;
-    }
-}
-EOF
-#nginx ssl密钥是
-sudo cat >/usr/local/nginx/ssl/$url/fullchain.cer<<-EOP
-EOP
-sudo cat >/usr/local/nginx/ssl/$url/$url.key<<-EOP
-EOP
+
 #nginx启动
 sudo cat >/etc/systemd/system/nginx.service<<-EOF
 [Unit]
@@ -99,12 +88,10 @@ PrivateTmp=true
 WantedBy=multi-user.target
 EOF
 
-##SSL证书
+sudo systemctl start nginx.service
+sudo systemctl enable nginx.service
 
 
-
-# sudo systemctl enable nginx.service
-# sudo systemctl start nginx.service
 
 echo "###################### Install Nginx ok ... ######################"
 
