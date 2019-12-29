@@ -1,34 +1,36 @@
-#!/bin/bash
-
-##获
+###安装acme.sh
 wget -O -  https://get.acme.sh | sh
 
-/root/.acme.sh/acme.sh --issue -d  mgleek.mn -w /usr/local/nginx/html/
-#acme.sh --issue -d $url -w /usr/local/nginx/html/
+###安装证书###
+echo "1.阿里云 DNS"
+echo "2.CloudFlare DNS"
+read -p "请选择1-2：" num
+case num in
+1) 
+	dns="dns_ali"
+	read -p "请输入阿里云Ali_Key：" Ali_Key
+	read -p "请输入阿里云Ali_Secret：" Ali_Secret
+	export $Ali_Key && echo $Ali_Key >> ~/.bashrc
+	export $Ali_Secret && echo $Ali_Secret >> ~/.bashrc
+;;
+2)
+	dns="dns_cf"
+	read -p "请输入CloudFlare CF_Key：" CF_Key
+	read -p "请输入CloudFlare CF_Email：" CF_Email
+	export CF_Key && echo $CF_Key >> ~/.bashrc
+	export CF_Email && echo $CF_Email >> ~/.bashrc
+;; 
+*) echo "输入错误！" ;;	
+esac
+acme.sh --issue --dns $dns -d $url -d  "*.$url"
 
+###拷贝证书到nginx目录###
+acme.sh --install-cert -d  $url \
+--key-file       /usr/local/nginx/ssl/$url/$url.key  \
+--fullchain-file /usr/local/nginx/ssl/$url/fullchain.cer \
+--reloadcmd     "/usr/local/nginx/sbin/nginx -s reload"
+sudo systemctl start nginx.servic
+sudo systemctl enable nginx.service
 
-##nginx启动
-#sudo systemctl enable nginx.service
-#sudo systemctl start nginx.service
-
-yum -y install yum-utils
-yum-config-manager --enable rhui-REGION-rhel-server-extras rhui-REGION-rhel-server-optional
-sudo yum install certbot python2-certbot-nginx
-
-sudo certbot --nginx
-certbot certonly --webroot -w /usr/local/nginx/html/ -d mgleek.mn
-echo "0 0,12 * * * root python -c 'import random; import time; time.sleep(random.random() * 3600)' && certbot renew" | sudo tee -a /etc/crontab > /dev/null
-
-
-#!/bin/bash
-#install certbot
-#如果安装出错，删除epel-release  重新安装epel-release
-#sudo yum remove epel-release
-#sudo yum install -y epel-release
- 
-yum install -y certbot python2-certbot-nginx
- 
-certbot --nginx certonly
- 
-certbot certonly --webroot -w /usr/local/nginx/html/ -d mgleek.mn    #这里写自己域名
-certbot renew --dry-run
+###自动续费###
+0 0 * * * "/root/.acme.sh"/acme.sh --cron --home "/root/.acme.sh" >> /var/log/acme.sh-auto-renew.log
