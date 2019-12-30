@@ -268,7 +268,7 @@ sudo chmod 755 -R "$dir"
 cp -r "$dir" ~/
 /usr/local/nginx/sbin/nginx -s reload
 sudo systemctl restart nginx.service
-sleep 10
+sleep 7
 
 ################################### Add SSL ... ################################### 
 ###证书获取###
@@ -277,7 +277,7 @@ sudo certbot certonly --webroot -w /usr/local/nginx/html/ -d "$url" -m qwe@yahoo
 
 sudo certbot renew --dry-run	###自动续日
 
-sleep 40
+sleep 10
 
 
 ###写入配置
