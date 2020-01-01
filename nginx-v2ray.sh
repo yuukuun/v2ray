@@ -1,9 +1,11 @@
 #!/bin/bash
-###支持 CentOS 7 系列，Ubuntu 19/18/16 系列
+###支持 CentOS 7/8 系列，Ubuntu 19/18/16 系列
 ### wget https://yuukuun.github.io/v2ray/installall.sh && chmod +x installall.sh && ./installall.sh
 
 ################################### Install Nginx ... ################################### 
 read -p "请输入域名：" url
+num=$(cat /etc/redhat-release | cut -d " " -f4 | cut -d "." -f1)
+sudo sed -i 's/=enforcing/=disabled/g' /etc/selinux/config
 sudo mkdir -p /usr/local/nginx/ssl /usr/local/nginx/conf.d
 #判断是否redhat系列
 if [[ -f /etc/redhat-release ]];then
@@ -15,9 +17,17 @@ if [[ -f /etc/redhat-release ]];then
     sudo systemctl enable firewalld 
     sudo systemctl stop firewalld
 sudo yum install -y vim libtool zip perl-core zlib-devel gcc wget pcre* unzip automake autoconf make curl 
-sudo yum remove -y epel-release
-sudo yum install -y epel-release
-sudo yum install -y certbot python2-certbot-nginx
+      if [[ $num == "7" ]]; then
+          sudo yum remove -y epel-release
+          sudo yum install -y epel-release
+          sudo yum install -y certbot python2-certbot-nginx
+      elif [[ $num == "8" ]]; then
+          wget https://dl.eff.org/certbot-auto
+          sudo mv certbot-auto /usr/local/bin/certbot-auto
+          sudo chown root /usr/local/bin/certbot-auto
+          sudo chmod 0755 /usr/local/bin/certbot-auto
+      fi
+
 #判断是否ubuntu系列
 elif [[ -f /etc/lsb-release ]];then 
     cd /tmp
@@ -140,8 +150,8 @@ sudo cat >/etc/v2ray/config.json<<-EOF
   }
 }
 EOF
-sudo systemctl enable v2ray.service
-sudo systemctl start v2ray.service	
+sudo systemctl enable v2ray
+sudo systemctl start v2ray
 
 ################################### Get v2ray ... ################################### 
 dir="/usr/local/nginx/html/v2ray/"
@@ -267,18 +277,25 @@ EOP
 sudo chmod 755 -R "$dir"
 cp -r "$dir" ~/
 /usr/local/nginx/sbin/nginx -s reload
-sudo systemctl restart nginx.service
-sleep 7
+sudo systemctl restart nginx
+sleep 5
 
 ################################### Add SSL ... ################################### 
 ###证书获取###
-# sudo certbot --nginx certonly
-sudo certbot certonly --webroot -w /usr/local/nginx/html/ -d "$url" -m qwe@yahoo.com --agree-tos
-sudo certbot renew --dry-run	###自动续日
+
+
+if [[ $num == "8" ]]; then
+  sudo /usr/local/bin/certbot-auto certonly --webroot -w /usr/local/nginx/html/ -d "$url" -m qwe@yahoo.com --agree-tos
+  echo "0 0,12 * * * root python -c 'import random; import time; time.sleep(random.random() * 3600)' && /usr/local/bin/certbot-auto renew" | \
+  sudo tee -a /etc/crontab > /dev/null
+else
+  sudo certbot certonly --webroot -w /usr/local/nginx/html/ -d "$url" -m qwe@yahoo.com --agree-tos
+  echo "0 0,12 * * * root python -c 'import random; import time; time.sleep(random.random() * 3600)' && certbot renew" | \
+  sudo tee -a /etc/crontab > /dev/null  
+fi
+
 
 sleep 10
-
-
 ###写入配置
 sudo cat > /usr/local/nginx/conf.d/$url.conf<<-EOF
 server {
@@ -314,5 +331,5 @@ EOF
 
 /usr/local/nginx/sbin/nginx -t
 /usr/local/nginx/sbin/nginx -s reload
-sudo systemctl restart nginx.service
-sudo systemctl enable nginx.service
+sudo systemctl restart nginx
+sudo systemctl enable nginx
