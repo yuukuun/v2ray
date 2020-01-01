@@ -1,6 +1,6 @@
 #!/bin/bash
 ###支持 CentOS 7/8 系列，Ubuntu 19/18/16 系列
-### wget https://yuukuun.github.io/v2ray/installall.sh && chmod +x installall.sh && ./installall.sh
+### wget https://yuukuun.github.io/v2ray/nginx-v2ray.sh && chmod +x nginx-v2ray.sh && ./nginx-v2ray.sh
 
 ################################### Install Nginx ... ################################### 
 read -p "请输入域名：" url
