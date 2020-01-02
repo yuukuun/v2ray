@@ -1,47 +1,26 @@
 #!/bin/bash
 ###支持 CentOS 7/8 系列，Ubuntu 19/18/16 系列
-### wget https://yuukuun.github.io/v2ray/nginx-v2ray.sh && chmod +x nginx-v2ray.sh && ./nginx-v2ray.sh
+### curl -O https://yuukuun.github.io/v2ray/nginx-v2ray+.sh && chmod +x nginx-v2ray+.sh && ./nginx-v2ray+.sh
 
-################################### Install Nginx ... ################################### 
+################################### install nginx ... ################################### 
+### 初始化 ### 
 read -p "请输入域名：" url
-num=$(cat /etc/redhat-release | cut -d " " -f4 | cut -d "." -f1)
-sudo sed -i 's/=enforcing/=disabled/g' /etc/selinux/config
 sudo mkdir -p /usr/local/nginx/ssl /usr/local/nginx/conf.d
+sudo sed -i 's/=enforcing/=disabled/g' /etc/selinux/config
 #判断是否redhat系列
-if [[ -f /etc/redhat-release ]];then
-	sudo systemctl start firewalld
+if [[ -f /etc/redhat-release ]]; then
+    sudo systemctl start firewalld
     sudo firewall-cmd --add-service=http
     sudo firewall-cmd --add-service=https
     sudo firewall-cmd --runtime-to-permanent
     sudo firewall-cmd --reload
     sudo systemctl enable firewalld 
     sudo systemctl stop firewalld
-sudo yum install -y vim libtool zip perl-core zlib-devel gcc gcc-c++ wget pcre* unzip automake autoconf make curl 
-      if [[ $num == "7" ]]; then
-          sudo yum remove -y epel-release
-          sudo yum install -y epel-release
-          sudo yum install -y certbot python2-certbot-nginx
-      elif [[ $num == "8" ]]; then
-          wget https://dl.eff.org/certbot-auto
-          sudo mv certbot-auto /usr/local/bin/certbot-auto
-          sudo chown root /usr/local/bin/certbot-auto
-          sudo chmod 0755 /usr/local/bin/certbot-auto
-      fi
-
+sudo yum install -y gcc gcc-c++ vim libtool zip perl-core zlib-devel wget pcre* unzip automake autoconf make curl
 #判断是否ubuntu系列
 elif [[ -f /etc/lsb-release ]];then 
-    cd /tmp
-    sudo apt-get update
-sudo apt-get install gcc gcc-c++ zip vim wget unzip build-essential libtool zlib1g-dev libpcre3 libpcre3-dev libssl-dev automake autoconf make -y
-    ##证书用的
-  sudo apt-get install software-properties-common -y
-	sudo add-apt-repository universe -y
-	sudo add-apt-repository ppa:certbot/certbot -y
-	sudo apt-get update
-	sudo apt-get install certbot python-certbot-nginx
-	## 证书用的certbot python-certbot-nginx
-	
-    
+    sudo apt-get update 
+    sudo apt-get install curl gcc zip vim wget unzip build-essential libtool zlib1g-dev libpcre3 libpcre3-dev libssl-dev automake autoconf make -y
     wget http://www.cpan.org/src/5.0/perl-5.26.1.tar.gz
     tar -xzf perl-5.26.1.tar.gz
     cd perl-5.26.1
@@ -52,7 +31,8 @@ else
     echo "###################### Install error ... ######################"
 fi
 
-#开始安装nginx
+
+### 开始安装 nginx
 cd /tmp
 wget https://www.openssl.org/source/openssl-1.1.1a.tar.gz
 tar xzvf openssl-1.1.1a.tar.gz 
@@ -87,16 +67,16 @@ http {
     #gzip  on;
     include /usr/local/nginx/conf.d/*.conf;  
     server { 
-	    listen       80;
-	    server_name  $url;
-	    root /usr/local/nginx/html/;
-	    index index.php index.html;
-	    #rewrite ^(.*)$  https://\$host\$1 permanent; 
+      listen       80;
+      server_name  $url;
+      root /usr/local/nginx/html/;
+      index index.php index.html;
+      #rewrite ^(.*)$  https://\$host\$1 permanent; 
     } 
 }
 EOF
 
-#nginx启动
+#nginx http启动
 sudo cat >/etc/systemd/system/nginx.service<<-EOF
 [Unit]
 Description=nginx
@@ -111,10 +91,61 @@ PrivateTmp=true
 WantedBy=multi-user.target
 EOF
 sudo systemctl start nginx.service
-sleep 3
+sleep 2
+
+### SSL证书安装 ### 
+    curl -O https://dl.eff.org/certbot-auto
+    sudo mv certbot-auto /usr/local/bin/certbot-auto
+    sudo chown root /usr/local/bin/certbot-auto
+    sudo chmod 0755 /usr/local/bin/certbot-auto
+
+    sudo /usr/local/bin/certbot-auto certonly --webroot -w /usr/local/nginx/html/ -d "$url" -m qwe@yahoo.com --agree-tos
+    echo "0 0,12 * * * root python -c 'import random; import time; time.sleep(random.random() * 3600)' && /usr/local/bin/certbot-auto renew" | \
+    sudo tee -a /etc/crontab > /dev/null
 
 
-################################### Install v2ray ... ################################### 
+#nginx配置2
+sleep 5
+sudo cat > /usr/local/nginx/conf.d/$url.conf<<-EOF
+server {
+    listen 443 ssl http2;
+    server_name $url;
+    root /usr/local/nginx/html/;
+    index index.php index.html;
+    ssl_certificate  /etc/letsencrypt/live/$url/fullchain.pem; 
+    ssl_certificate_key /etc/letsencrypt/live/$url/privkey.pem;
+    #TLS 版本控制
+    ssl_protocols   TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+    ssl_ciphers     'TLS13-AES-256-GCM-SHA384:TLS13-CHACHA20-POLY1305-SHA256:TLS13-AES-128-GCM-SHA256:TLS13-AES-128-CCM-8-SHA256:TLS13-AES-128-CCM-SHA256:EECDH+CHACHA20:EECDH+CHACHA20-draft:EECDH+ECDSA+AES128:EECDH+aRSA+AES128:RSA+AES128:EECDH+ECDSA+AES256:EECDH+aRSA+AES256:RSA+AES256:EECDH+ECDSA+3DES:EECDH+aRSA+3DES:RSA+3DES:!MD5';
+    ssl_prefer_server_ciphers   on;
+    # 开启 1.3 0-RTT
+    ssl_early_data  on;
+    ssl_stapling on;
+    ssl_stapling_verify on;
+    #add_header Strict-Transport-Security "max-age=31536000";
+    #access_log /var/log/nginx/access.log combined;
+    location /7ba7 {
+        proxy_redirect off;
+        proxy_pass http://127.0.0.1:11234; 
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host \$http_host;
+    }
+    location / {
+       try_files \$uri \$uri/ /index.php?\$args;
+    }
+}
+EOF
+
+#nginx https启动
+/usr/local/nginx/sbin/nginx -t && sed -i 's/#rewrite/rewrite/g' /usr/local/nginx/conf/nginx.conf
+sudo systemctl restart nginx.service
+sudo systemctl enable nginx.service
+
+
+
+################################### install v2ray ... ################################### 
 bash <(curl -L -s https://install.direct/go.sh)
 uuid=$(cat /proc/sys/kernel/random/uuid)
 
@@ -153,10 +184,10 @@ sudo cat >/etc/v2ray/config.json<<-EOF
   }
 }
 EOF
-sudo systemctl enable v2ray
-sudo systemctl start v2ray
+sudo systemctl enable v2ray.service
+sudo systemctl start v2ray.service
 
-################################### Get v2ray ... ################################### 
+################################### isntaall v2ray client... ################################### 
 dir="/usr/local/nginx/html/v2ray/"
 sudo mkdir -p "$dir" && cd "$dir" 
 wget https://github.com/2dust/v2rayN/releases/download/3.3/v2rayN-Core.zip && unzip v2rayN-Core.zip && rm -rf "$dir"*.zip
@@ -249,6 +280,7 @@ cat >"$dir"index.html<<-EOP
 <h4><div class="alert alert-success" align="center">下载</div></h4>
 <a type="button" class="btn btn-primary btn-lg" href="v2rayN-Core.zip" target="_blank">Windows客户端</a>
 <a type="button" class="btn btn-primary btn-lg" href="v2rayNG_1.1.14.apk" target="_blank">安卓客户端</a>
+<a type="button" class="btn btn-primary btn-lg" href="https://apps.apple.com/us/app/shadowrocket/id932747118" target="_blank">IOS客户端 Shadowrocket</a>
 <!--<a type="button" class="btn btn-primary btn-lg" href="v2rayNG_1.1.14.apk" target="_blank">IOS客户端</a>-->
 <!-- 参数设置 -->
 <h4><div class="alert alert-success" align="center">客户端参数</div></h4>
@@ -277,63 +309,5 @@ cat >"$dir"index.html<<-EOP
 </html>
 
 EOP
-sudo chmod 755 -R "$dir"
-cp -r "$dir" ~/
-/usr/local/nginx/sbin/nginx -s reload
-sudo systemctl restart nginx
-sleep 5
-
-################################### Add SSL ... ################################### 
-###证书获取###
-
-
-if [[ $num == "8" ]]; then
-  sudo /usr/local/bin/certbot-auto certonly --webroot -w /usr/local/nginx/html/ -d "$url" -m qwe@yahoo.com --agree-tos
-  echo "0 0,12 * * * root python -c 'import random; import time; time.sleep(random.random() * 3600)' && /usr/local/bin/certbot-auto renew" | \
-  sudo tee -a /etc/crontab > /dev/null
-else
-  sudo certbot certonly --webroot -w /usr/local/nginx/html/ -d "$url" -m qwe@yahoo.com --agree-tos
-  echo "0 0,12 * * * root python -c 'import random; import time; time.sleep(random.random() * 3600)' && certbot renew" | \
-  sudo tee -a /etc/crontab > /dev/null  
-fi
-
-
-sleep 10
-###写入配置
-sleep 4
-sudo cat > /usr/local/nginx/conf.d/$url.conf<<-EOF
-server {
-    listen 443 ssl http2;
-    server_name $url;
-    root /usr/local/nginx/html/;
-    index index.php index.html;
-    ssl_certificate  /etc/letsencrypt/live/$url/fullchain.pem; 
-    ssl_certificate_key /etc/letsencrypt/live/$url/privkey.pem;
-    #TLS 版本控制
-    ssl_protocols   TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
-    ssl_ciphers     'TLS13-AES-256-GCM-SHA384:TLS13-CHACHA20-POLY1305-SHA256:TLS13-AES-128-GCM-SHA256:TLS13-AES-128-CCM-8-SHA256:TLS13-AES-128-CCM-SHA256:EECDH+CHACHA20:EECDH+CHACHA20-draft:EECDH+ECDSA+AES128:EECDH+aRSA+AES128:RSA+AES128:EECDH+ECDSA+AES256:EECDH+aRSA+AES256:RSA+AES256:EECDH+ECDSA+3DES:EECDH+aRSA+3DES:RSA+3DES:!MD5';
-    ssl_prefer_server_ciphers   on;
-    # 开启 1.3 0-RTT
-    ssl_early_data  on;
-    ssl_stapling on;
-    ssl_stapling_verify on;
-    #add_header Strict-Transport-Security "max-age=31536000";
-    #access_log /var/log/nginx/access.log combined;
-    location /7ba7 {
-        proxy_redirect off;
-        proxy_pass http://127.0.0.1:11234; 
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Host \$http_host;
-    }
-    location / {
-       try_files \$uri \$uri/ /index.php?\$args;
-    }
-}
-EOF
-
-/usr/local/nginx/sbin/nginx -t
-/usr/local/nginx/sbin/nginx -s reload
-sudo systemctl restart nginx
-sudo systemctl enable nginx
+/usr/local/nginx/sbin/nginx -t && /usr/local/nginx/sbin/nginx -s reload
+sudo systemctl restart nginx.service
