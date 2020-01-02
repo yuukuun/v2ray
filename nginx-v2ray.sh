@@ -16,7 +16,7 @@ if [[ -f /etc/redhat-release ]];then
     sudo firewall-cmd --reload
     sudo systemctl enable firewalld 
     sudo systemctl stop firewalld
-sudo yum install -y vim libtool zip perl-core zlib-devel gcc wget pcre* unzip automake autoconf make curl uuid-dev
+sudo yum install -y vim libtool zip perl-core zlib-devel gcc gcc-c++ wget pcre* unzip automake autoconf make curl 
       if [[ $num == "7" ]]; then
           sudo yum remove -y epel-release
           sudo yum install -y epel-release
@@ -38,7 +38,7 @@ elif [[ -f /etc/lsb-release ]];then
 	sudo add-apt-repository ppa:certbot/certbot -y
 	sudo apt-get update
 	## 证书用的certbot python-certbot-nginx
-    sudo apt-get install certbot python-certbot-nginx gcc zip vim wget curl unzip build-essential libtool zlib1g-dev libpcre3 \
+    sudo apt-get install certbot python-certbot-nginx gcc gcc-c++ zip vim wget curl unzip build-essential libtool zlib1g-dev libpcre3 \
     libpcre3-dev libssl-dev automake autoconf make -y
     wget http://www.cpan.org/src/5.0/perl-5.26.1.tar.gz
     tar -xzf perl-5.26.1.tar.gz
