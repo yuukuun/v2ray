@@ -94,6 +94,17 @@ sudo systemctl start nginx.service
 sleep 2
 
 ### SSL证书安装 ### 
+temp=$(lsb_release -cs)
+if [[ $temp == "xenial" ]]; then
+  sudo apt-get update -y
+  sudo apt-get install software-properties-common -y
+  sudo add-apt-repository universe -y
+  sudo add-apt-repository ppa:certbot/certbot -y
+  sudo apt-get update -y
+  sudo apt-get install certbot python-certbot-nginx -y
+  certbot certonly --webroot -w /usr/local/nginx/html/ -d "$url"  -m qwe@yahoo.com --agree-tos
+  0 0,12 * * * python -c 'import random; import time; time.sleep(random.random() * 3600)' && certbot renew
+else
     curl -O https://dl.eff.org/certbot-auto
     sudo mv certbot-auto /usr/local/bin/certbot-auto
     sudo chown root /usr/local/bin/certbot-auto
@@ -102,6 +113,7 @@ sleep 2
     sudo /usr/local/bin/certbot-auto certonly --webroot -w /usr/local/nginx/html/ -d "$url" -m qwe@yahoo.com --agree-tos
     echo "0 0,12 * * * root python -c 'import random; import time; time.sleep(random.random() * 3600)' && /usr/local/bin/certbot-auto renew" | \
     sudo tee -a /etc/crontab > /dev/null
+fi
 
 
 #nginx配置2
@@ -184,8 +196,10 @@ sudo cat >/etc/v2ray/config.json<<-EOF
   }
 }
 EOF
-sudo systemctl enable v2ray.service
+
 sudo systemctl start v2ray.service
+sudo systemctl enable v2ray.service
+
 
 ################################### isntaall v2ray client... ################################### 
 dir="/usr/local/nginx/html/v2ray/"
