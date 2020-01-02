@@ -16,7 +16,7 @@ if [[ -f /etc/redhat-release ]];then
     sudo firewall-cmd --reload
     sudo systemctl enable firewalld 
     sudo systemctl stop firewalld
-sudo yum install -y vim libtool zip perl-core zlib-devel gcc wget pcre* unzip automake autoconf make curl 
+sudo yum install -y vim libtool zip perl-core zlib-devel gcc wget pcre* unzip automake autoconf make curl uuid-dev
       if [[ $num == "7" ]]; then
           sudo yum remove -y epel-release
           sudo yum install -y epel-release
@@ -113,7 +113,7 @@ sudo systemctl start nginx.service
 
 ################################### Install v2ray ... ################################### 
 bash <(curl -L -s https://install.direct/go.sh)
-uuid=$(/usr/bin/uuidgen)
+uuid=$(cat /proc/sys/kernel/random/uuid)
 
 sudo rm -rf /etc/v2ray/config.json
 sudo cat >/etc/v2ray/config.json<<-EOF
