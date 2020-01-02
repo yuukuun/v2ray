@@ -37,9 +37,10 @@ elif [[ -f /etc/lsb-release ]];then
 	sudo add-apt-repository universe -y
 	sudo add-apt-repository ppa:certbot/certbot -y
 	sudo apt-get update
+	sudo apt-get install certbot python-certbot-nginx
 	## 证书用的certbot python-certbot-nginx
-    sudo apt-get install certbot python-certbot-nginx gcc gcc-c++ zip vim wget curl unzip build-essential libtool zlib1g-dev libpcre3 \
-    libpcre3-dev libssl-dev automake autoconf make -y
+	sudo apt-get update
+    sudo apt-get install gcc gcc-c++ zip vim wget curl unzip build-essential libtool zlib1g-dev libpcre3 libpcre3-dev libssl-dev automake autoconf make -y
     wget http://www.cpan.org/src/5.0/perl-5.26.1.tar.gz
     tar -xzf perl-5.26.1.tar.gz
     cd perl-5.26.1
