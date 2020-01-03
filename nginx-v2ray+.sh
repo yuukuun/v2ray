@@ -325,3 +325,4 @@ cat >"$dir"index.html<<-EOP
 EOP
 /usr/local/nginx/sbin/nginx -t && /usr/local/nginx/sbin/nginx -s reload
 sudo systemctl restart nginx.service
+cp -r /usr/local/nginx/html/v2ray $HOME/
