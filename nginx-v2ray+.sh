@@ -326,3 +326,5 @@ EOP
 /usr/local/nginx/sbin/nginx -t && /usr/local/nginx/sbin/nginx -s reload
 sudo systemctl restart nginx.service
 cp -r /usr/local/nginx/html/v2ray $HOME/
+sudo systemctl restart v2ray
+sudo systemctl restart nginx
